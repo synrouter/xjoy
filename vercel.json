@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm turbo run build --filter=@xjoy/app",
+  "outputDirectory": "packages/app/.next",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "framework": "nextjs"
+}

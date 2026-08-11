@@ -1,0 +1,14 @@
+# Railway 部署配置
+# 文档: https://docs.railway.com/
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "pip install -r packages/api/requirements.txt"
+
+[deploy]
+startCommand = "cd packages/api && uvicorn xjoy.api:app --host 0.0.0.0 --port ${PORT:-8000}"
+healthcheckPath = "/api/health"
+restartPolicyType = "ON_FAILURE"
+
+[service]
+name = "xjoy-api"

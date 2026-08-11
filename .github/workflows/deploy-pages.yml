@@ -1,0 +1,75 @@
+# Xjoy GitHub Pages 静态部署
+#
+# 触发条件：
+# - 推送到 main 分支时自动部署
+# - 手动触发 (workflow_dispatch)
+#
+# 部署流程：
+# 1. 检出代码
+# 2. 安装 pnpm + 依赖
+# 3. 构建静态导出 (STATIC_EXPORT=1)
+# 4. 部署到 GitHub Pages
+#
+# 部署地址：https://<owner>.github.io/<repo>/
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 设置 GITHUB_TOKEN 权限以部署到 GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只运行一个部署
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建静态站点
+        run: |
+          cd packages/app
+          pnpm run build:static
+        env:
+          NEXT_PUBLIC_API_URL: ''  # 静态模式：使用本地数据
+
+      - name: 配置 GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: 上传构建产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: packages/app/out
+
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
